@@ -8,6 +8,10 @@
         :label-col="labelCol"
         :wrapper-col="wrapperCol"
       >
+        <a-form-model-item ref="username" label="Username" prop="username">
+          <a-input v-model="form.username" />
+        </a-form-model-item>
+
         <a-form-model-item ref="email" label="Email" prop="email">
           <a-input v-model="form.email" />
         </a-form-model-item>
@@ -21,9 +25,21 @@
           </a-input-password>
         </a-form-model-item>
 
+        <a-form-model-item
+          ref="confirmPassword"
+          label="Confirm"
+          prop="confirmPassword"
+        >
+          <a-input-password
+            ref="confirmPassword"
+            v-model="form.confirmPassword"
+          >
+          </a-input-password>
+        </a-form-model-item>
+
         <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
           <a-button type="primary" @click="validateUser">
-            Login
+            Create
           </a-button>
           <a-button style="margin-left: 10px;" @click="resetForm">
             Reset
@@ -44,10 +60,23 @@ export default {
       labelCol: { span: 4 },
       wrapperCol: { span: 14 },
       form: {
+        username: "",
         password: "",
-        email: ""
+        email: "",
+        confirmPassword: ""
       },
       rules: {
+        username: [
+          {
+            required: true,
+            message: "Please input username"
+          },
+          {
+            min: 3,
+            max: 8,
+            message: "Length should be 3 to 8"
+          }
+        ],
         password: [
           {
             required: true,
@@ -64,6 +93,17 @@ export default {
             required: true,
             message: "Please input email"
           }
+        ],
+        confirmPassword: [
+          {
+            required: true,
+            message: "Please input password"
+          },
+          {
+            min: 6,
+            max: 10,
+            message: "Length should be 6 to 10"
+          }
         ]
       }
     };
@@ -71,9 +111,10 @@ export default {
   methods: {
     async validateUser(event) {
       event.preventDefault();
+      this.onSubmit();
       try {
         const userResponse = await axios.post(
-          "http://localhost:3000/api/auth/v1/login",
+          "http://localhost:3000/api/auth/v1/register",
           this.form
         );
         const {
@@ -87,6 +128,19 @@ export default {
         const err = error.response.data.message;
         alert(err);
       }
+    },
+    onSubmit() {
+      this.$refs.ruleForm.validate(valid => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm() {
+      this.$refs.ruleForm.resetFields();
     }
   }
 };

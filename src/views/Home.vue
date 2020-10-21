@@ -15,8 +15,9 @@
               v-for="user in users"
               :key="user.id"
               @click="loadConversation(user.id)"
+              class="cover"
             >
-              <img class="thumbnail" :src="user.avatar" />
+              <img class="cover-thumbnail" :src="user.avatar" />
               <div>{{ user.username }}</div>
               <div>{{ user.latestMessage }}</div>
             </li>
@@ -48,65 +49,51 @@
 </template>
 
 <script>
-// import axios from "axios";
-// import io from "socket.io-client";
+import axios from "axios";
+import io from "socket.io-client";
 export default {
   name: "Home",
   data() {
     return {
-      // io: io.connect("http://localhost:3000/room"),
+      io: io.connect("http://localhost:3000/room"),
       message: "",
-      currentMessagesConversation: [
-        {
-          id: 1,
-          msg: "hello",
-          isAuthor: true
-        },
-        {
-          id: 2,
-          msg: "sadsa",
-          isAuthor: false
-        }
-      ],
-      users: [
-        {
-          id: 1,
-          username: "phupro",
-          avatar:
-            "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
-          latestMessage: "Yo what s up"
-        },
-        {
-          id: 2,
-          username: "phupro",
-          avatar:
-            "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
-          latestMessage: "Yo what s up"
-        },
-        {
-          id: 3,
-          username: "phupro",
-          avatar:
-            "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
-          latestMessage: "Yo what s up"
-        }
-      ],
+      currentMessagesConversation: [],
+      users: [],
       bindingClass: {
         author: "author",
         roomate: "roomate"
-      }
+      },
+      authorId: null
     };
   },
-  // created() {
-
-  // },
+  created() {
+    this.getAuthorId();
+    this.listenMessage();
+  },
+  mounted() {
+    this.getFriends();
+  },
   methods: {
     leaveRoom() {
-      alert("> Leaving");
-      this.$router.push({ path: "login" });
+      localStorage.clear("access_token");
+      localStorage.clear("info");
+      window.location.href = "/login";
+    },
+    listenMessage() {
+      this.io.on("receiveMess", msg => {
+        console.log(this.io);
+        console.log(msg);
+        const messageCtx = {
+          id: this.currentMessagesConversation.length + 1,
+          msg: msg,
+          isAuthor: false
+        };
+        this.currentMessagesConversation.push(messageCtx);
+      });
     },
     sendMessage(event) {
       event.preventDefault();
+      this.io.emit("sendMess", this.message);
       this.currentMessagesConversation = [
         ...this.currentMessagesConversation,
         {
@@ -117,13 +104,32 @@ export default {
       ];
       this.message = "";
     },
+    getAuthorId() {
+      const info = localStorage.getItem("info");
+      this.authorId = info.userId;
+    },
     getAuthorContext(context) {
       return context.isAuthor
         ? this.bindingClass.author
         : this.bindingClass.roomate;
     },
     async loadConversation(currentUserId) {
-      alert(currentUserId);
+      const { _id } = this.users[currentUserId];
+      this.io.emit("joinRoom", _id);
+    },
+    async getFriends() {
+      const response = await axios.get(
+        "http://localhost:3000/api/users/v1?offset=0&limit=10"
+      );
+      const {
+        data: { data: friends }
+      } = response;
+      this.users = friends.map((friend, id) => {
+        return {
+          id,
+          ...friend
+        };
+      });
     }
   }
 };
@@ -136,9 +142,13 @@ export default {
 .roomate {
   text-align: right;
 }
-.thumbnail {
-  overflow: hidden;
+
+.cover {
   width: 100%;
-  height: 100px;
+  height: 100%;
+}
+
+.cover-thumbnail {
+  width: 100%;
 }
 </style>
