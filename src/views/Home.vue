@@ -1,24 +1,26 @@
 <template>
-  <div class="home">
-    <a-page-header
-      style="border: 1px solid rgb(235, 237, 240)"
-      title="Super chat"
-    >
-      <template slot="extra">
+  <div id="layout" class="home">
+    <a-row>
+      <a-col :span="4">
+        <span>{{ currentConversationInfo.username }}</span>
+      </a-col>
+      <a-col :span="16">Center</a-col>
+      <a-col :span="4">
         <a-dropdown>
-          <a-menu slot="overlay" @click="handleMenuClick">
-            <a-menu-item key="1"> <a-icon type="user" />Profile </a-menu-item>
-            <a-menu-item @click="leaveRoom" key="3">
-              <a-icon type="user" />Log out
+          <div>
+            <img src="currentConversationInfo.avatar" />
+          </div>
+          <a-menu slot="overlay">
+            <a-menu-item>
+              <a href="javascript:;">Profile</a>
+            </a-menu-item>
+            <a-menu-item>
+              <a @click="leaveRoom">Log out</a>
             </a-menu-item>
           </a-menu>
-          <a-button style="margin-left: 8px">
-            Button <a-icon type="down" />
-          </a-button>
         </a-dropdown>
-      </template>
-    </a-page-header>
-
+      </a-col>
+    </a-row>
     <a-row>
       <a-col :span="5">
         <a-menu
@@ -30,33 +32,46 @@
           @click="handleClick"
         >
           <a-sub-menu key="friends" @titleClick="loadConversation">
-            <span slot="title"><a-icon type="user" /><span>Friends</span></span>
-            <a-menu-item-group key="g1">
-              <a-menu-item
-                v-for="user in users"
-                :key="user.id"
-                @click="loadConversation(user._id)"
-                class="cover"
-              >
-                {{ user.username }}
-              </a-menu-item>
-            </a-menu-item-group>
+            <span slot="title">
+              <a-icon type="user" />
+              <span>Friends</span>
+            </span>
+            <a-input-search
+              placeholder="Search friend ..."
+              enter-button="Send"
+              @search="searchFriend"
+              v-model="searchFriendValue"
+              class="cover-search"
+            />
+            <a-menu-item
+              v-for="user in users"
+              :key="user.id"
+              @click="loadConversation(user._id)"
+              class="cover"
+            >
+              <span class="friend-avatar">
+                <img :src="user.avatar" />
+              </span>
+              <span class="friend-name">{{ user.username }}</span>
+            </a-menu-item>
           </a-sub-menu>
           <a-sub-menu key="sub2" @titleClick="titleClick">
             <span slot="title"
-              ><a-icon type="appstore" /><span>Navigation Two</span></span
+              ><a-icon type="appstore" /><span>Request</span></span
             >
-            <!-- <a-menu-item key="5">
-              Option 5
-            </a-menu-item>
-            <a-menu-item key="6">
-              Option 6
-            </a-menu-item> -->
           </a-sub-menu>
           <a-sub-menu key="sub4">
             <span slot="title"
-              ><a-icon type="setting" /><span>Navigation Three</span></span
+              ><a-icon type="setting" /><span>Conversation</span></span
             >
+            <a-input-search
+              placeholder="Search friend ..."
+              enter-button="Send"
+              size="medium"
+              @search="searchConversation"
+              v-model="searchConversationValue"
+              class="cover-search"
+            />
             <a-menu-item key="9">
               Option 9
             </a-menu-item>
@@ -100,17 +115,26 @@ export default {
   name: "Home",
   data() {
     return {
+      prefixImg:
+        "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
       current: ["mail"],
       openKeys: ["friends"],
       io: io.connect("http://localhost:3000/room"),
       message: "",
       currentMessagesConversation: [],
+      currentConversationInfo: {
+        _id: undefined,
+        avatar: "",
+        username: ""
+      },
       users: [],
       bindingClass: {
         author: "author",
         roomate: "roomate"
       },
-      authorId: null
+      authorId: null,
+      searchFriendValue: "",
+      searchConversationValue: ""
     };
   },
   created() {
@@ -140,8 +164,6 @@ export default {
     },
     listenMessage() {
       this.io.on("receiveMess", msg => {
-        console.log(this.io);
-        console.log(msg);
         const messageCtx = {
           id: this.currentMessagesConversation.length + 1,
           msg: msg,
@@ -172,8 +194,13 @@ export default {
         ? this.bindingClass.author
         : this.bindingClass.roomate;
     },
-    async loadConversation(currentUserId) {
-      this.io.emit("joinRoom", currentUserId);
+    setCurrentConversationInfo(currentUser_Id) {
+      const info = this.users.find(info => info._id === currentUser_Id);
+      this.currentConversationInfo = { ...info };
+    },
+    async loadConversation(currentUser_Id) {
+      this.io.emit("joinRoom", currentUser_Id);
+      this.setCurrentConversationInfo(currentUser_Id);
     },
     async getFriends() {
       const response = await axios.get(
@@ -188,12 +215,18 @@ export default {
           ...friend
         };
       });
-    }
+    },
+    async searchFriend() {},
+    async searchConversation() {}
   }
 };
 </script>
 
 <style scoped>
+#layout .ant-layout-header {
+  background: #ffffff;
+  color: #fff;
+}
 .author {
   text-align: left;
 }
@@ -206,7 +239,24 @@ export default {
   height: 100%;
 }
 
-.cover-thumbnail {
-  width: 100%;
+.cover-search {
+  padding: 0 10px;
+}
+
+.friend-avatar {
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+}
+
+.friend-name {
+  text-align: center;
+  margin-left: 20px;
+}
+
+.friend-avatar img {
+  height: 100%;
+  border-radius: 50%;
+  cursor: pointer;
 }
 </style>
