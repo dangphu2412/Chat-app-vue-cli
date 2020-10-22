@@ -37,7 +37,7 @@
           </a-input-password>
         </a-form-model-item>
 
-        <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
+        <a-form-model-item :wrapper-col="{ span: 12, offset: 6 }">
           <a-button type="primary" @click="validateUser">
             Create
           </a-button>
@@ -57,8 +57,8 @@ export default {
   name: "Register",
   data() {
     return {
-      labelCol: { span: 4 },
-      wrapperCol: { span: 14 },
+      labelCol: { span: 6 },
+      wrapperCol: { span: 12 },
       form: {
         username: "",
         password: "",

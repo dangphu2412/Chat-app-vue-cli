@@ -1,28 +1,79 @@
 <template>
   <div class="home">
-    <div class="chat-container">
-      <header class="chat-header">
-        <h1><i class="fas fa-smile"></i> ChatCord</h1>
-        <button @click="leaveRoom" class="btn">Leave Room</button>
-      </header>
-      <main class="chat-main">
-        <div class="chat-sidebar">
-          <h3><i class="fas fa-comments"></i> Room Name:</h3>
-          <h2 id="room-name"></h2>
-          <h3><i class="fas fa-users"></i> Users</h3>
-          <ul id="users">
-            <li
-              v-for="user in users"
-              :key="user.id"
-              @click="loadConversation(user.id)"
-              class="cover"
+    <a-page-header
+      style="border: 1px solid rgb(235, 237, 240)"
+      title="Super chat"
+    >
+      <template slot="extra">
+        <a-dropdown>
+          <a-menu slot="overlay" @click="handleMenuClick">
+            <a-menu-item key="1"> <a-icon type="user" />Profile </a-menu-item>
+            <a-menu-item @click="leaveRoom" key="3">
+              <a-icon type="user" />Log out
+            </a-menu-item>
+          </a-menu>
+          <a-button style="margin-left: 8px">
+            Button <a-icon type="down" />
+          </a-button>
+        </a-dropdown>
+      </template>
+    </a-page-header>
+
+    <a-row>
+      <a-col :span="5">
+        <a-menu
+          style="width: 100%"
+          :default-selected-keys="['1']"
+          :open-keys.sync="openKeys"
+          :wrapper-col="{ span: 6, offset: 6 }"
+          mode="inline"
+          @click="handleClick"
+        >
+          <a-sub-menu key="friends" @titleClick="loadConversation">
+            <span slot="title"><a-icon type="user" /><span>Friends</span></span>
+            <a-menu-item-group key="g1">
+              <a-menu-item
+                v-for="user in users"
+                :key="user.id"
+                @click="loadConversation(user._id)"
+                class="cover"
+              >
+                {{ user.username }}
+              </a-menu-item>
+            </a-menu-item-group>
+          </a-sub-menu>
+          <a-sub-menu key="sub2" @titleClick="titleClick">
+            <span slot="title"
+              ><a-icon type="appstore" /><span>Navigation Two</span></span
             >
-              <img class="cover-thumbnail" :src="user.avatar" />
-              <div>{{ user.username }}</div>
-              <div>{{ user.latestMessage }}</div>
-            </li>
-          </ul>
-        </div>
+            <!-- <a-menu-item key="5">
+              Option 5
+            </a-menu-item>
+            <a-menu-item key="6">
+              Option 6
+            </a-menu-item> -->
+          </a-sub-menu>
+          <a-sub-menu key="sub4">
+            <span slot="title"
+              ><a-icon type="setting" /><span>Navigation Three</span></span
+            >
+            <a-menu-item key="9">
+              Option 9
+            </a-menu-item>
+            <a-menu-item key="10">
+              Option 10
+            </a-menu-item>
+            <a-menu-item key="11">
+              Option 11
+            </a-menu-item>
+            <a-menu-item key="12">
+              Option 12
+            </a-menu-item>
+          </a-sub-menu>
+        </a-menu>
+      </a-col>
+
+      <a-col :span="19" class="main">
         <div class="chat-messages">
           <div v-for="context in currentMessagesConversation" :key="context.id">
             <div :class="getAuthorContext(context)">
@@ -30,21 +81,15 @@
             </div>
           </div>
         </div>
-      </main>
-      <div class="chat-form-container">
-        <form id="chat-form" @submit="sendMessage">
-          <input
-            id="msg"
-            type="text"
-            placeholder="Enter Message"
-            required
-            autocomplete="off"
-            v-model="message"
-          />
-          <button class="btn"><i class="fas fa-paper-plane"></i> Send</button>
-        </form>
-      </div>
-    </div>
+        <a-input-search
+          placeholder="Type here ..."
+          enter-button="Send"
+          size="large"
+          @search="sendMessage"
+          v-model="message"
+        />
+      </a-col>
+    </a-row>
   </div>
 </template>
 
@@ -55,6 +100,8 @@ export default {
   name: "Home",
   data() {
     return {
+      current: ["mail"],
+      openKeys: ["friends"],
       io: io.connect("http://localhost:3000/room"),
       message: "",
       currentMessagesConversation: [],
@@ -73,7 +120,19 @@ export default {
   mounted() {
     this.getFriends();
   },
+  watch: {
+    openKeys(val) {
+      console.log("openKeys", val);
+    }
+  },
   methods: {
+    handleClick(e) {
+      console.log("click", e);
+    },
+    titleClick(e) {
+      console.log("titleClick", e);
+    },
+    handleMenuClick() {},
     leaveRoom() {
       localStorage.clear("access_token");
       localStorage.clear("info");
@@ -91,8 +150,8 @@ export default {
         this.currentMessagesConversation.push(messageCtx);
       });
     },
-    sendMessage(event) {
-      event.preventDefault();
+    sendMessage() {
+      console.log("here");
       this.io.emit("sendMess", this.message);
       this.currentMessagesConversation = [
         ...this.currentMessagesConversation,
@@ -114,8 +173,7 @@ export default {
         : this.bindingClass.roomate;
     },
     async loadConversation(currentUserId) {
-      const { _id } = this.users[currentUserId];
-      this.io.emit("joinRoom", _id);
+      this.io.emit("joinRoom", currentUserId);
     },
     async getFriends() {
       const response = await axios.get(
