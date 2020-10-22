@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-card title="Card title" :bordered="false" class="container">
+    <a-card title="Login" :bordered="false" class="container">
       <a-form-model
         ref="ruleForm"
         :model="form"
@@ -21,7 +21,7 @@
           </a-input-password>
         </a-form-model-item>
 
-        <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
+        <a-form-model-item :wrapper-col="{ span: 12, offset: 6 }">
           <a-button type="primary" @click="validateUser">
             Login
           </a-button>
@@ -29,6 +29,9 @@
             Reset
           </a-button>
         </a-form-model-item>
+        <router-link to="register">
+          Not have an account ? <b>Register here</b>
+        </router-link>
       </a-form-model>
     </a-card>
   </div>
@@ -38,11 +41,11 @@
 import axios from "axios";
 
 export default {
-  name: "register",
+  name: "Login",
   data() {
     return {
-      labelCol: { span: 4 },
-      wrapperCol: { span: 14 },
+      labelCol: { span: 6 },
+      wrapperCol: { span: 12 },
       form: {
         password: "",
         email: ""
@@ -87,6 +90,19 @@ export default {
         const err = error.response.data.message;
         alert(err);
       }
+    },
+    onSubmit() {
+      this.$refs.ruleForm.validate(valid => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm() {
+      this.$refs.ruleForm.resetFields();
     }
   }
 };

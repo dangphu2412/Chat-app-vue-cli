@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-card title="Card title" :bordered="false" class="container">
+    <a-card title="Register" :bordered="false" class="container">
       <a-form-model
         ref="ruleForm"
         :model="form"
@@ -54,7 +54,7 @@
 import axios from "axios";
 
 export default {
-  name: "register",
+  name: "Register",
   data() {
     return {
       labelCol: { span: 4 },
