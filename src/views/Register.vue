@@ -45,6 +45,9 @@
             Reset
           </a-button>
         </a-form-model-item>
+        <router-link to="login">
+          <b>Login</b>
+        </router-link>
       </a-form-model>
     </a-card>
   </div>
@@ -150,5 +153,6 @@ export default {
 .container {
   width: 700px;
   margin: 0 auto;
+  text-align: center;
 }
 </style>

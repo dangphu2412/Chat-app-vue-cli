@@ -87,7 +87,7 @@ a {
 
 .chat-messages {
 	padding: 30px;
-	height: 80vh;
+	height: 83vh;
 	overflow-y: scroll;
 }
 
@@ -176,6 +176,10 @@ a {
 .join-main .btn {
 	margin-top: 20px;
 	width: 100%;
+}
+
+.mr-2 {
+	margin-right: 10px;
 }
 
 @media (max-width: 700px) {

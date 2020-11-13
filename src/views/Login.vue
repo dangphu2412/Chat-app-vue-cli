@@ -112,5 +112,6 @@ export default {
 .container {
   width: 700px;
   margin: 0 auto;
+  text-align: center;
 }
 </style>

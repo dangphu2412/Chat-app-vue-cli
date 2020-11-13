@@ -1,14 +1,17 @@
 <template>
   <div id="layout" class="home">
-    <a-row>
-      <a-col :span="4">
+    <a-row class="header">
+      <a-col :span="5">CHAT WITH FUSS</a-col>
+      <a-col :span="15">
+        <a-icon class="video" @click="startCallVideo" type="video-camera" />
+      </a-col>
+      <a-col :span="2">
         <span>{{ currentConversationInfo.username }}</span>
       </a-col>
-      <a-col :span="16">Center</a-col>
-      <a-col :span="4">
+      <a-col :span="2">
         <a-dropdown>
-          <div>
-            <img src="currentConversationInfo.avatar" />
+          <div class="friend-avatar mr-3">
+            <img :src="currentConversationInfo.avatar" />
           </div>
           <a-menu slot="overlay">
             <a-menu-item>
@@ -105,6 +108,15 @@
         />
       </a-col>
     </a-row>
+    <a-modal
+      v-model="visible"
+      title="Call video"
+      @onOk="onOk"
+      @onCancel="onCancel"
+    >
+      <video autoplay class="remote-video" id="remote-video"></video>
+      <video autoplay class="local-video" id="local-video"></video>
+    </a-modal>
   </div>
 </template>
 
@@ -115,6 +127,7 @@ export default {
   name: "Home",
   data() {
     return {
+      visible: false,
       prefixImg:
         "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
       current: ["mail"],
@@ -134,12 +147,17 @@ export default {
       },
       authorId: null,
       searchFriendValue: "",
-      searchConversationValue: ""
+      searchConversationValue: "",
+      peerConnection: undefined,
+      remotePeerConnection: undefined,
+      peerConfig: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
     };
   },
   created() {
     this.getAuthorId();
     this.listenMessage();
+    this.listenCall();
+    this.listenAnswer();
   },
   mounted() {
     this.getFriends();
@@ -185,6 +203,12 @@ export default {
       ];
       this.message = "";
     },
+    onOk() {
+      this.visible = false;
+    },
+    onCancel() {
+      this.visible = false;
+    },
     getAuthorId() {
       const info = localStorage.getItem("info");
       this.authorId = info.userId;
@@ -194,13 +218,9 @@ export default {
         ? this.bindingClass.author
         : this.bindingClass.roomate;
     },
-    setCurrentConversationInfo(currentUser_Id) {
-      const info = this.users.find(info => info._id === currentUser_Id);
-      this.currentConversationInfo = { ...info };
-    },
-    async loadConversation(currentUser_Id) {
-      this.io.emit("joinRoom", currentUser_Id);
-      this.setCurrentConversationInfo(currentUser_Id);
+    async getConnectedDevices(type) {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices.filter(device => device.kind === type);
     },
     async getFriends() {
       const response = await axios.get(
@@ -216,8 +236,99 @@ export default {
         };
       });
     },
+    setPeerConnection() {
+      this.peerConnection = new RTCPeerConnection(this.peerConfig);
+    },
+    setRemotePeerConnection() {
+      this.remotePeerConnection = new RTCPeerConnection(this.peerConfig);
+    },
+    setCurrentConversationInfo(currentUser_Id) {
+      const info = this.users.find(info => info._id === currentUser_Id);
+      this.currentConversationInfo = { ...info };
+    },
+    async setLocalVideoReturnStream() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true
+      });
+      const localVideo = document.getElementById("local-video");
+      if (localVideo) {
+        localVideo.srcObject = stream;
+      }
+      return stream;
+    },
+    setRemoteStream() {
+      const remoteStream = new MediaStream();
+      const remoteVideo = document.getElementById("remote-video");
+      remoteVideo.srcObject = remoteStream;
+
+      // this.remotePeerConnection.addEventListener("track", event => {
+      //   remoteStream.addTrack(event.track, remoteStream);
+      // });
+    },
+    async listenCall() {
+      this.io.on("call-made", async data => {
+        this.setRemotePeerConnection();
+        this.visible = true;
+        const stream = await this.setLocalVideoReturnStream();
+        this.peerConnection = new RTCPeerConnection(this.configuration);
+        await this.peerConnection.setRemoteDescription(
+          new RTCSessionDescription(data.offer)
+        );
+        const answer = await this.peerConnection.createAnswer();
+        await this.peerConnection.setLocalDescription(
+          new RTCSessionDescription(answer)
+        );
+        await this.emitOfferToCurrentConversation();
+        stream
+          .getTracks()
+          .forEach(track => this.peerConnection.addTrack(track, stream));
+        this.io.emit("make-answer", {
+          answer,
+          to: data.to
+        });
+      });
+    },
+    // Setup socket answer-made to listen answer
+    async listenAnswer() {
+      this.io.on("answer-made", async data => {
+        this.setRemoteStream();
+        const remoteDesc = new RTCSessionDescription(data.answer);
+        await this.remotePeerConnection.setRemoteDescription(remoteDesc);
+      });
+    },
+    async loadConversation(currentUser_Id) {
+      this.io.emit("joinRoom", currentUser_Id);
+      this.setCurrentConversationInfo(currentUser_Id);
+    },
     async searchFriend() {},
-    async searchConversation() {}
+    async searchConversation() {},
+    async emitOfferToCurrentConversation() {
+      const currentUser_Id = this.currentConversationInfo._id;
+      const offer = await this.peerConnection.createOffer();
+      await this.peerConnection.setLocalDescription(
+        new RTCSessionDescription(offer)
+      );
+      const peerInfo = {
+        to: currentUser_Id,
+        offer
+      };
+      this.io.emit("call-user", peerInfo);
+    },
+    async startCallVideo() {
+      this.visible = true;
+      try {
+        this.setPeerConnection();
+        const stream = await this.setLocalVideoReturnStream();
+        await this.emitOfferToCurrentConversation();
+        stream
+          .getTracks()
+          .forEach(track => this.peerConnection.addTrack(track, stream));
+      } catch (error) {
+        this.visible = false;
+        alert(error);
+      }
+    }
   }
 };
 </script>
@@ -227,11 +338,25 @@ export default {
   background: #ffffff;
   color: #fff;
 }
+.header {
+  padding-top: 10px;
+}
+
 .author {
   text-align: left;
 }
 .roomate {
   text-align: right;
+}
+
+.video {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.local-video {
+  width: 200px;
+  height: 200px;
 }
 
 .cover {
