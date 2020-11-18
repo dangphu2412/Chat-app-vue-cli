@@ -2,30 +2,34 @@
   <div id="layout" class="home">
     <a-row class="header">
       <a-col :span="5">CHAT WITH FUSS</a-col>
-      <a-col :span="15">
-        <a-icon class="video" @click="startCallVideo" type="video-camera" />
-      </a-col>
+      <a-col :span="19">
+        <a-row>
+          <a-col :span="20">
+            <a-icon class="video" @click="startCallVideo" type="video-camera" />
+          </a-col>
 
-      <!-- Current username of conversation -->
-      <a-col :span="2">
-        <span>{{ currentConversationInfo.username }}</span>
-      </a-col>
+          <!-- Current username of conversation -->
+          <a-col :span="3">
+            <span>{{ currentConversationInfo.username }}</span>
+          </a-col>
 
-      <a-col :span="2">
-        <a-dropdown>
-          <div class="friend-avatar mr-3">
-            <!-- Get avatar of conversation -->
-            <img :src="currentConversationInfo.avatar" />
-          </div>
-          <a-menu slot="overlay">
-            <a-menu-item>
-              <a href="javascript:;">Profile</a>
-            </a-menu-item>
-            <a-menu-item>
-              <a @click="leaveRoom">Log out</a>
-            </a-menu-item>
-          </a-menu>
-        </a-dropdown>
+          <a-col :span="1">
+            <a-dropdown>
+              <div class="friend-avatar">
+                <!-- Get avatar of conversation -->
+                <img :src="currentConversationInfo.avatar" />
+              </div>
+              <a-menu slot="overlay">
+                <a-menu-item class="item-dropdown-profile">
+                  <a href="javascript:;">Profile</a>
+                </a-menu-item>
+                <a-menu-item class="item-dropdown-profile">
+                  <a @click="leaveRoom">Log out</a>
+                </a-menu-item>
+              </a-menu>
+            </a-dropdown>
+          </a-col>
+        </a-row>
       </a-col>
     </a-row>
     <a-row>
@@ -48,7 +52,7 @@
               enter-button="Send"
               @search="searchFriend"
               v-model="searchFriendValue"
-              class="cover-search"
+              :class="cover - search"
             />
 
             <!-- Load conversation by _id of user -->
@@ -139,8 +143,6 @@ export default {
   data() {
     return {
       visible: false,
-      prefixImg:
-        "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
       current: ["mail"],
       openKeys: ["friends"],
       io: undefined,
@@ -148,7 +150,8 @@ export default {
       currentMessagesConversation: [],
       currentConversationInfo: {
         _id: undefined,
-        avatar: "",
+        avatar:
+          "https://i.pinimg.com/originals/51/f6/fb/51f6fb256629fc755b8870c801092942.png",
         username: "",
       },
       users: [],
@@ -437,12 +440,21 @@ export default {
 </script>
 
 <style scoped>
+.main .ant-input-group-wrapper {
+  display: inline-block;
+  width: 100%;
+  text-align: start;
+  vertical-align: top;
+  padding: 0 20px;
+}
+
 #layout .ant-layout-header {
   background: #ffffff;
   color: #fff;
 }
 .header {
   padding-top: 10px;
+  margin: 0 10px;
 }
 
 .author {
@@ -469,6 +481,7 @@ export default {
 
 .cover-search {
   padding: 0 10px;
+  margin: 0 20px;
 }
 
 .friend-avatar {
@@ -486,5 +499,9 @@ export default {
   height: 100%;
   border-radius: 50%;
   cursor: pointer;
+}
+
+.item-dropdown-profile {
+  padding: 10px 30px;
 }
 </style>

@@ -22,10 +22,8 @@
         </a-form-model-item>
 
         <a-form-model-item :wrapper-col="{ span: 12, offset: 6 }">
-          <a-button type="primary" @click="validateUser">
-            Login
-          </a-button>
-          <a-button style="margin-left: 10px;" @click="resetForm">
+          <a-button type="primary" @click="validateUser"> Login </a-button>
+          <a-button style="margin-left: 10px" @click="resetForm">
             Reset
           </a-button>
         </a-form-model-item>
@@ -48,27 +46,27 @@ export default {
       wrapperCol: { span: 12 },
       form: {
         password: "",
-        email: ""
+        email: "",
       },
       rules: {
         password: [
           {
             required: true,
-            message: "Please input password"
+            message: "Please input password",
           },
           {
             min: 6,
             max: 10,
-            message: "Length should be 6 to 10"
-          }
+            message: "Length should be 6 to 10",
+          },
         ],
         email: [
           {
             required: true,
-            message: "Please input email"
-          }
-        ]
-      }
+            message: "Please input email",
+          },
+        ],
+      },
     };
   },
   methods: {
@@ -80,7 +78,7 @@ export default {
           this.form
         );
         const {
-          data: { data }
+          data: { data },
         } = userResponse;
         const { token, info } = data;
         localStorage.setItem("access_token", token);
@@ -92,7 +90,7 @@ export default {
       }
     },
     onSubmit() {
-      this.$refs.ruleForm.validate(valid => {
+      this.$refs.ruleForm.validate((valid) => {
         if (valid) {
           alert("submit!");
         } else {
@@ -103,8 +101,8 @@ export default {
     },
     resetForm() {
       this.$refs.ruleForm.resetFields();
-    }
-  }
+    },
+  },
 };
 </script>
 

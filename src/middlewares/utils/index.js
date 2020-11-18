@@ -9,7 +9,7 @@ function nextFactory(context, middleware, index) {
   };
 }
 
-export const setupRouterMiddleware = router =>
+export const setupRouterMiddleware = (router) =>
   router.beforeEach((to, from, next) => {
     if (to.meta.middleware) {
       const middleware = Array.isArray(to.meta.middleware)
@@ -20,7 +20,7 @@ export const setupRouterMiddleware = router =>
         from,
         next,
         router,
-        to
+        to,
       };
       const nextMiddleware = nextFactory(context, middleware, 1);
 

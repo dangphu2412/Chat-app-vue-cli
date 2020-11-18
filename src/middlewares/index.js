@@ -3,7 +3,7 @@ export * from "./utils";
 export const loggingMiddleware = ({ next, store }) => {
   if (store.getters.auth.isLogging) {
     return next({
-      name: ""
+      name: "",
     });
   }
 
@@ -13,7 +13,7 @@ export const loggingMiddleware = ({ next, store }) => {
 export const authMiddleware = ({ next }) => {
   if (!localStorage.getItem("access_token")) {
     return next({
-      name: "Login"
+      name: "Login",
     });
   }
 
