@@ -52,7 +52,7 @@
               enter-button="Send"
               @search="searchFriend"
               v-model="searchFriendValue"
-              :class="cover - search"
+              class="cover-search"
             />
 
             <!-- Load conversation by _id of user -->
@@ -186,7 +186,7 @@ export default {
   },
   methods: {
     initSocket() {
-      this.io = io.connect("http://localhost:3000/room");
+      this.io = io.connect("https://rtc-web-app.herokuapp.com/room");
     },
     async initPeerConnectionAndTrack() {
       await this.initLocalStream();
@@ -299,7 +299,7 @@ export default {
     },
     async getFriends() {
       const response = await axios.get(
-        "http://localhost:3000/api/users/v1?offset=0&limit=10"
+        "https://rtc-web-app.herokuapp.com/api/users/v1?offset=0&limit=10"
       );
       const {
         data: { data: friends },
@@ -386,7 +386,22 @@ export default {
       this.io.emit("joinRoom", currentUserId);
       this.setCurrentConversationInfo(currentUserId);
     },
-    async searchFriend() {},
+    async searchFriend() {
+      const searchValue = this.searchFriendValue;
+      const response = await axios.get(
+        `https://rtc-web-app.herokuapp.com/api/users/v1?offset=0&limit=10&search|user.friend.name|${searchValue}`
+      );
+      const {
+        data: { data: friends },
+      } = response;
+      this.users = friends.map((friend, id) => {
+        return {
+          id,
+          ...friend,
+        };
+      });
+      this.searchFriendValue = "";
+    },
     async searchConversation() {},
     async emitOfferToCurrentConversation() {
       const currentUserId = this.currentConversationInfo._id;
@@ -481,7 +496,6 @@ export default {
 
 .cover-search {
   padding: 0 10px;
-  margin: 0 20px;
 }
 
 .friend-avatar {
@@ -492,7 +506,7 @@ export default {
 
 .friend-name {
   text-align: center;
-  margin-left: 20px;
+  margin: 0 20px;
 }
 
 .friend-avatar img {

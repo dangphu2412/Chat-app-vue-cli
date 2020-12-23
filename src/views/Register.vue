@@ -115,7 +115,7 @@ export default {
       this.onSubmit();
       try {
         const userResponse = await axios.post(
-          "http://localhost:3000/api/auth/v1/register",
+          "https://rtc-web-app.herokuapp.com/api/auth/v1/register",
           this.form
         );
         const {

@@ -74,7 +74,7 @@ export default {
       event.preventDefault();
       try {
         const userResponse = await axios.post(
-          "http://localhost:3000/api/auth/v1/login",
+          "https://rtc-web-app.herokuapp.com/api/auth/v1/login",
           this.form
         );
         const {
@@ -85,6 +85,7 @@ export default {
         localStorage.setItem("info", JSON.stringify(info));
         window.location.href = "/";
       } catch (error) {
+        console.log(error);
         const err = error.response.data.message;
         alert(err);
       }
