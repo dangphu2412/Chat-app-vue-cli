@@ -119,8 +119,13 @@
       @onOk="onOk"
       @onCancel="onCancel"
     >
-      <video autoplay class="remote-video" id="remote-video"></video>
-      <video autoplay class="local-video" id="local-video"></video>
+      <div class="remote-video">
+        <video autoplay width="400" height="400" id="remote-video"></video>
+      </div>
+
+      <div class="local-video">
+        <video autoplay id="local-video"></video>
+      </div>
     </a-modal>
   </div>
 </template>
@@ -517,5 +522,13 @@ export default {
 
 .item-dropdown-profile {
   padding: 10px 30px;
+}
+
+.remote-video {
+  text-align: center;
+}
+
+.local-video {
+  text-align: right;
 }
 </style>
